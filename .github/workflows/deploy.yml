@@ -1,0 +1,85 @@
+name: Deploy to Apps Script
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install clasp
+        run: npm install -g @google/clasp@2.4.2
+
+      - name: Write clasp credentials
+        env:
+          CLASPRC: ${{ secrets.CLASPRC_JSON }}
+        run: |
+          python3 - << 'PYEOF'
+          import json, os, sys
+          raw = os.environ['CLASPRC']
+          raw = raw.replace('\r', '').strip()
+          try:
+              data = json.loads(raw)
+          except json.JSONDecodeError as e:
+              print(f'ERROR: CLASPRC_JSON secret is invalid JSON: {e}', file=sys.stderr)
+              print('Regenerate it by running: clasp login && cat ~/.clasprc.json', file=sys.stderr)
+              sys.exit(1)
+          out = os.path.expanduser('~/.clasprc.json')
+          with open(out, 'w') as f:
+              json.dump(data, f)
+          print('Credentials written and validated.')
+          PYEOF
+
+      - name: Refresh access token
+        env:
+          CLASPRC: ${{ secrets.CLASPRC_JSON }}
+        run: |
+          python3 - << 'PYEOF'
+          import json, os, sys, subprocess, time
+          creds_path = os.path.expanduser('~/.clasprc.json')
+          with open(creds_path) as f:
+              creds = json.load(f)
+          token    = creds['token']
+          settings = creds['oauth2ClientSettings']
+          now_ms   = int(time.time() * 1000)
+          if token.get('expiry_date', 0) > now_ms + 60000:
+              print('Access token still valid, skipping refresh.')
+              sys.exit(0)
+          print('Access token expired — refreshing via curl...')
+          result = subprocess.run([
+              'curl', '-sf', '-X', 'POST',
+              'https://oauth2.googleapis.com/token',
+              '--data-urlencode', 'grant_type=refresh_token',
+              '--data-urlencode', 'client_id='    + settings['clientId'],
+              '--data-urlencode', 'client_secret=' + settings['clientSecret'],
+              '--data-urlencode', 'refresh_token=' + token['refresh_token'],
+          ], capture_output=True, text=True)
+          if result.returncode != 0:
+              print('curl failed: ' + result.stderr, file=sys.stderr)
+              sys.exit(1)
+          resp = json.loads(result.stdout)
+          if 'access_token' not in resp:
+              print('Refresh failed: ' + result.stdout, file=sys.stderr)
+              sys.exit(1)
+          token['access_token'] = resp['access_token']
+          token['expiry_date']  = now_ms + resp.get('expires_in', 3600) * 1000
+          creds['token'] = token
+          with open(creds_path, 'w') as f:
+              json.dump(creds, f)
+          print('Token refreshed successfully.')
+          PYEOF
+
+      - name: Push to Apps Script
+        run: clasp push --force

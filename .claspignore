@@ -1,0 +1,8 @@
+docs/**
+n8n/**
+*.md
+package.json
+package-lock.json
+node_modules/**
+.git/**
+.claude/**

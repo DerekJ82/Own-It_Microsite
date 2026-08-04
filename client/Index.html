@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <?!= include('client/Style'); ?>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════
+     GLOBAL NAV BAR
+     ══════════════════════════════════════════════════════════ -->
+<div id="global-nav">
+  <div class="nav-wordmark" onclick="goHome()">Own-It Microsite</div>
+  <div id="nav-user" class="nav-user"></div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     APP SHELL — all views live here
+     ══════════════════════════════════════════════════════════ -->
+<div id="app-shell">
+
+  <!-- ── LANDING VIEW ── -->
+  <div id="view-landing" class="view active">
+
+    <!-- SC-style chapter nav (Home active on landing) -->
+    <div class="sc-nav-bar" id="nav-bar-landing">
+      <a class="sc-nav-tab active" onclick="goHome()">Home</a>
+      <a class="sc-nav-tab" onclick="openWorkstream(0)"><span class="sc-nav-tab-num">01</span>Pricing</a>
+      <a class="sc-nav-tab" onclick="openWorkstream(1)"><span class="sc-nav-tab-num">02</span>Bid Governance</a>
+      <a class="sc-nav-tab" onclick="openWorkstream(2)"><span class="sc-nav-tab-num">03</span>Credit / A-R</a>
+      <a class="sc-nav-tab" onclick="openWorkstream(3)"><span class="sc-nav-tab-num">04</span>Contract</a>
+      <a class="sc-nav-tab" onclick="openWorkstream(4)"><span class="sc-nav-tab-num">05</span>Proposal &amp; Content</a>
+    </div>
+
+    <!-- Hero -->
+    <div class="landing-hero">
+      <h1>Own-It Workstreams</h1>
+      <p>Montreal Workshop Pre-Work Hub</p>
+    </div>
+
+    <!-- Story tile grid -->
+    <div class="tile-grid" id="tile-grid"></div>
+
+  </div><!-- /view-landing -->
+
+  <!-- ── WORKSTREAM DEEP-DIVE VIEW ── -->
+  <div id="view-ws" class="view view-ws">
+
+    <!-- SC-style chapter nav (active tab set dynamically) -->
+    <div class="sc-nav-bar" id="nav-bar-ws">
+      <a class="sc-nav-tab" onclick="goHome()">Home</a>
+      <a class="sc-nav-tab" id="ws-tab-0" onclick="openWorkstream(0)"><span class="sc-nav-tab-num">01</span>Pricing</a>
+      <a class="sc-nav-tab" id="ws-tab-1" onclick="openWorkstream(1)"><span class="sc-nav-tab-num">02</span>Bid Governance</a>
+      <a class="sc-nav-tab" id="ws-tab-2" onclick="openWorkstream(2)"><span class="sc-nav-tab-num">03</span>Credit / A-R</a>
+      <a class="sc-nav-tab" id="ws-tab-3" onclick="openWorkstream(3)"><span class="sc-nav-tab-num">04</span>Contract</a>
+      <a class="sc-nav-tab" id="ws-tab-4" onclick="openWorkstream(4)"><span class="sc-nav-tab-num">05</span>Proposal &amp; Content</a>
+    </div>
+
+    <!-- Content rendered by JS -->
+    <div id="ws-body"></div>
+
+  </div><!-- /view-ws -->
+
+</div><!-- /app-shell -->
+
+<!-- ══════════════════════════════════════════════════════════
+     WORKSTREAM DEFINITIONS
+     ══════════════════════════════════════════════════════════ -->
+<script>
+var OI_WORKSTREAMS = [
+  {
+    id: 'pricing',
+    num: '01',
+    label: 'Pricing',
+    subtitle: 'Deal support, win/loss, cost modelling, and AI tools',
+    narrative: 'Consolidates deal support volumes, win/loss analysis, and product-family cost models into a single view. Covers 1X hardware and license inputs, SG&A additions, and proposes updated direct vs. allocated profitability thresholds.',
+    kpis: [
+      { label: 'Workstream Lead',   value: 'TBD',  sub: 'To be assigned' },
+      { label: 'Key AI Tool',       value: 'BriBot', sub: 'In development' },
+      { label: 'Data Sources',      value: '4+',   sub: 'DS Summary, SFDC, Models' }
+    ],
+    pills: ['Win / Loss Analysis', 'Cost Models', '1X Hardware & License', 'SG&A'],
+    links: [
+      { label: 'EPB Pipeline',   icon: 'fa-bullseye'      },
+      { label: 'Stratcheck',     icon: 'fa-chart-line'    },
+      { label: 'ACIA Rev & Margin', icon: 'fa-chart-simple' }
+    ],
+    sections: [
+      { id: 'process-map',  label: 'Process Map',         icon: 'fa-map'          },
+      { id: 'root-cause',   label: 'Root Cause Challenges', icon: 'fa-triangle-exclamation' },
+      { id: 'win-loss',     label: 'Win / Loss',          icon: 'fa-chart-bar'    },
+      { id: 'cost-models',  label: 'Cost Models',         icon: 'fa-calculator'   },
+      { id: 'tools',        label: 'AI Tools',            icon: 'fa-robot'        }
+    ]
+  },
+  {
+    id: 'bid-governance',
+    num: '02',
+    label: 'Bid Governance',
+    subtitle: 'Approval matrix, deal volumes, and automation',
+    narrative: 'Maps the current approval matrix with average time at each stage. Builds the TCV x SBC volume matrix with L1-L4 boundaries overlaid, and presents clear options for redrawing levels without adding diligence risk.',
+    kpis: [
+      { label: 'Approval Levels', value: 'L1-L6',  sub: 'L5/L6 unchanged' },
+      { label: 'Focus Area',      value: 'L1-L4',  sub: 'Speed improvement' },
+      { label: 'Tool in Dev.',    value: 'Bid-Waive', sub: "Greg's automation" }
+    ],
+    pills: ['TCV x SBC Matrix', 'Approval Time Mapping', 'Level Redesign Options'],
+    links: [
+      { label: 'EPB Pipeline', icon: 'fa-bullseye' },
+      { label: 'CMRg Pipeline', icon: 'fa-chart-bar' }
+    ],
+    sections: [
+      { id: 'process-map',   label: 'Process Map',           icon: 'fa-map'          },
+      { id: 'root-cause',    label: 'Root Cause Challenges', icon: 'fa-triangle-exclamation' },
+      { id: 'volume-matrix', label: 'Volume Matrix',         icon: 'fa-table-cells'  },
+      { id: 'level-options', label: 'Level Options',         icon: 'fa-sliders'      }
+    ]
+  },
+  {
+    id: 'credit-ar',
+    num: '03',
+    label: 'Credit / A-R',
+    subtitle: 'Credit policy, decision criteria, and documentation',
+    narrative: 'Pulls together credit policy rules, CAR and credit-validation materials from the past two weeks. Findings are organized by policy type — current drivers alongside proposed changes, policy level by policy level.',
+    kpis: [
+      { label: 'Policy Types',  value: 'TBD',  sub: 'To be catalogued' },
+      { label: 'Source Docs',   value: '2 wks', sub: 'Transcripts, minutes, decks' },
+      { label: 'Output Format', value: 'Tab / Policy', sub: 'Current vs. proposed' }
+    ],
+    pills: ['Policy Rules', 'Decision Criteria', 'CAR Documentation'],
+    links: [
+      { label: 'Credit Analysis', icon: 'fa-credit-card' }
+    ],
+    sections: [
+      { id: 'process-map',    label: 'Process Map',           icon: 'fa-map'          },
+      { id: 'root-cause',     label: 'Root Cause Challenges', icon: 'fa-triangle-exclamation' },
+      { id: 'policy-changes', label: 'Policy Changes',        icon: 'fa-file-shield'  },
+      { id: 'documentation',  label: 'Documentation',         icon: 'fa-file-lines'   }
+    ]
+  },
+  {
+    id: 'contract',
+    num: '04',
+    label: 'Contract',
+    subtitle: 'Clause pain points, days-in-stage, and simplification',
+    narrative: 'Closes the volume gap with contract volumes split by custom vs. standard, and days-in-stage baseline matching WS1-WS3. Defines the top 15-20 discrete process or clause changes that would materially simplify contracting.',
+    kpis: [
+      { label: 'Target Changes', value: '15-20', sub: 'Discrete, mutually exclusive' },
+      { label: 'AI Tools',       value: '3+',   sub: 'SRC, Redline Ros, etc.' },
+      { label: 'Gap to Close',   value: 'Days-in-Stage', sub: 'Volume baseline' }
+    ],
+    pills: ['Clause Pain Points', 'Days-in-Stage', 'AI Tools (SRC, Redline Ros)'],
+    links: [
+      { label: 'EPB Pipeline', icon: 'fa-bullseye' }
+    ],
+    sections: [
+      { id: 'process-map',    label: 'Process Map',           icon: 'fa-map'          },
+      { id: 'root-cause',     label: 'Root Cause Challenges', icon: 'fa-triangle-exclamation' },
+      { id: 'clause-changes', label: 'Top Clause Changes',    icon: 'fa-list-check'   },
+      { id: 'tools',          label: 'AI Tools',              icon: 'fa-robot'        }
+    ]
+  },
+  {
+    id: 'proposal-content',
+    num: '05',
+    label: 'Proposal & Content',
+    subtitle: 'Loopio, Highspot, proposal automation, and content strategy',
+    narrative: 'Covers the full proposal-response ecosystem: what is available in Highspot vs. OneSource, actual usage data, and the content opportunity areas that let sellers shape RFPs with TELUS content up front.',
+    kpis: [
+      { label: 'Content Platform', value: 'Highspot', sub: 'Primary seller tool' },
+      { label: 'Standard Answers', value: 'Loopio',   sub: 'RFP automation' },
+      { label: 'Data Source',      value: 'Usage Reports', sub: 'Highspot analytics' }
+    ],
+    pills: ['Highspot vs OneSource', 'Loopio Usage', 'Proposal Automation', 'RFP Content Strategy'],
+    links: [
+      { label: 'Reports Generator', icon: 'fa-file-text' }
+    ],
+    sections: [
+      { id: 'process-map',    label: 'Process Map',             icon: 'fa-map'          },
+      { id: 'root-cause',     label: 'Root Cause Challenges',   icon: 'fa-triangle-exclamation' },
+      { id: 'content-audit',  label: 'Highspot vs OneSource',   icon: 'fa-table-columns' },
+      { id: 'usage-data',     label: 'Usage Data',              icon: 'fa-chart-bar'    },
+      { id: 'opportunities',  label: 'Opportunity Areas',       icon: 'fa-lightbulb'    }
+    ]
+  }
+];
+
+// ══════════════════════════════════════════════════════════
+// APP STATE
+// ══════════════════════════════════════════════════════════
+var oiActiveWs      = null;   // 0-4 | null
+var oiActiveSection = {};     // { wsIdx: sectionId }
+
+// ══════════════════════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════════════════════
+function goHome() {
+  oiActiveWs = null;
+  document.getElementById('view-landing').classList.add('active');
+  document.getElementById('view-ws').classList.remove('active');
+  document.getElementById('app-shell').scrollTop = 0;
+}
+
+function openWorkstream(idx) {
+  oiActiveWs = idx;
+  document.getElementById('view-landing').classList.remove('active');
+  document.getElementById('view-ws').classList.add('active');
+
+  // Set active nav tab
+  [0,1,2,3,4].forEach(function(i) {
+    var tab = document.getElementById('ws-tab-' + i);
+    if (tab) tab.classList.toggle('active', i === idx);
+  });
+
+  // Render the deep-dive
+  renderWorkstreamView(idx);
+  document.getElementById('view-ws').scrollTop = 0;
+}
+
+// ══════════════════════════════════════════════════════════
+// LANDING — build story tile grid
+// ══════════════════════════════════════════════════════════
+function buildTileGrid() {
+  var grid = document.getElementById('tile-grid');
+  var h = '';
+  for (var i = 0; i < OI_WORKSTREAMS.length; i++) {
+    h += buildStoryTile(i);
+  }
+  grid.innerHTML = h;
+}
+
+function buildStoryTile(idx) {
+  var ws = OI_WORKSTREAMS[idx];
+  var h = '';
+  h += '<div class="story-tile" onclick="openWorkstream(' + idx + ')">';
+
+  // Top row
+  h += '<div class="tile-top-row">';
+  h += '<div class="tile-badge">' + ws.num + '</div>';
+  h += '<div style="flex:1;min-width:0;">';
+  h += '<div class="tile-title">' + ws.label + '</div>';
+  h += '<div class="tile-subtitle">' + ws.subtitle + '</div>';
+  h += '</div>';
+  h += '<div class="tile-open-hint">Open <i class="fa-solid fa-chevron-right" style="font-size:0.5rem;"></i></div>';
+  h += '</div>';
+
+  // KPI boxes
+  var cols = ws.kpis.length > 3 ? 2 : ws.kpis.length;
+  h += '<div class="tile-kpi-grid" style="grid-template-columns:repeat(' + cols + ',1fr);">';
+  for (var ki = 0; ki < ws.kpis.length; ki++) {
+    var kpi = ws.kpis[ki];
+    var valSize = kpi.value.length > 6 ? '0.9rem' : '1.05rem';
+    h += '<div class="tile-kpi-box">';
+    h += '<div class="tile-kpi-label">' + kpi.label + '</div>';
+    h += '<div class="tile-kpi-value" style="font-size:' + valSize + ';">' + kpi.value + '</div>';
+    if (kpi.sub) h += '<div class="tile-kpi-sub">' + kpi.sub + '</div>';
+    h += '</div>';
+  }
+  h += '</div>';
+
+  // Pills
+  h += '<div class="tile-pills">';
+  for (var pi = 0; pi < ws.pills.length; pi++) {
+    h += '<span class="tile-pill">' + ws.pills[pi] + '</span>';
+  }
+  h += '</div>';
+
+  // Bottom links
+  if (ws.links && ws.links.length) {
+    h += '<div class="tile-links">';
+    for (var li = 0; li < ws.links.length; li++) {
+      var lnk = ws.links[li];
+      h += '<button class="tile-link-btn" onclick="event.stopPropagation();">';
+      h += '<i class="fa-solid ' + lnk.icon + '" style="font-size:0.5rem;opacity:0.8;"></i>' + lnk.label;
+      h += '</button>';
+    }
+    h += '</div>';
+  }
+
+  h += '</div>';
+  return h;
+}
+
+// ══════════════════════════════════════════════════════════
+// WORKSTREAM DEEP-DIVE — chapter header + section tabs
+// ══════════════════════════════════════════════════════════
+function renderWorkstreamView(idx) {
+  var ws  = OI_WORKSTREAMS[idx];
+  var numStr = ws.num;
+  var h = '';
+
+  // Full-page wrapper
+  h += '<div class="ws-content-wrap">';
+
+  // Chapter header card
+  h += '<div class="ws-chapter-card">';
+  h += '<div style="display:flex;align-items:flex-start;gap:28px;margin-bottom:32px;">';
+  h += '<div class="ws-chapter-ghost-num">' + numStr + '</div>';
+  h += '<div style="flex:1;">';
+  h += '<div class="ws-chapter-eyebrow">' + ws.subtitle + '</div>';
+  h += '<div class="ws-chapter-title">' + ws.label + '</div>';
+  h += '<div class="ws-chapter-narrative">' + ws.narrative + '</div>';
+  h += '</div>';
+  h += '</div>';
+
+  // KPI row
+  var gridCols = ws.kpis.length > 3 ? 4 : ws.kpis.length;
+  h += '<div class="ws-kpi-row" style="grid-template-columns:repeat(' + gridCols + ',1fr);">';
+  for (var ki = 0; ki < ws.kpis.length; ki++) {
+    var kpi = ws.kpis[ki];
+    h += '<div class="ws-kpi-box">';
+    h += '<div class="ws-kpi-box-label">' + kpi.label + '</div>';
+    h += '<div class="ws-kpi-box-value">' + kpi.value + '</div>';
+    if (kpi.sub) h += '<div class="ws-kpi-box-sub">' + kpi.sub + '</div>';
+    h += '</div>';
+  }
+  h += '</div>';
+  h += '</div>'; // /chapter card
+
+  // Section tab buttons
+  var activeSec = oiActiveSection[idx] || ws.sections[0].id;
+  h += '<div class="ws-section-tabs" id="ws-tabs-' + idx + '">';
+  for (var si = 0; si < ws.sections.length; si++) {
+    var sec = ws.sections[si];
+    var isActive = sec.id === activeSec;
+    h += '<button class="ws-section-tab' + (isActive ? ' active' : '') + '" ';
+    h += 'onclick="setWsSection(' + idx + ',\'' + sec.id + '\')">';
+    h += '<i class="fa-solid ' + sec.icon + '" style="margin-right:5px;font-size:0.7em;opacity:0.8;"></i>' + sec.label;
+    h += '</button>';
+  }
+  h += '</div>';
+
+  // Section content
+  h += '<div id="ws-section-' + idx + '">';
+  h += renderWsSection(idx, activeSec);
+  h += '</div>';
+
+  // Hub links bar
+  if (ws.links && ws.links.length) {
+    h += '<div class="ws-hub-bar">';
+    h += '<div class="ws-hub-bar-label">Related</div>';
+    for (var li = 0; li < ws.links.length; li++) {
+      var lnk = ws.links[li];
+      h += '<button class="ws-hub-link">';
+      h += '<i class="fa-solid ' + lnk.icon + '" style="font-size:0.58rem;opacity:0.8;"></i>';
+      h += lnk.label;
+      h += '<i class="fa-solid fa-arrow-up-right-from-square" style="font-size:0.44rem;opacity:0.4;margin-left:2px;"></i>';
+      h += '</button>';
+    }
+    h += '</div>';
+  }
+
+  h += '</div>'; // /content-wrap
+  document.getElementById('ws-body').innerHTML = h;
+}
+
+function setWsSection(idx, sectionId) {
+  oiActiveSection[idx] = sectionId;
+  var ws = OI_WORKSTREAMS[idx];
+
+  // Update tab active states
+  var tabs = document.querySelectorAll('#ws-tabs-' + idx + ' .ws-section-tab');
+  for (var ti = 0; ti < tabs.length; ti++) {
+    tabs[ti].classList.toggle('active', ws.sections[ti].id === sectionId);
+  }
+
+  // Render section
+  document.getElementById('ws-section-' + idx).innerHTML = renderWsSection(idx, sectionId);
+}
+
+// ══════════════════════════════════════════════════════════
+// SECTION CONTENT RENDERERS
+// Each workstream section falls into a type: process-map,
+// root-cause (editable), or data (placeholder / loaded).
+// ══════════════════════════════════════════════════════════
+function renderWsSection(idx, sectionId) {
+  var ws  = OI_WORKSTREAMS[idx];
+
+  // Find section definition
+  var secDef = null;
+  for (var i = 0; i < ws.sections.length; i++) {
+    if (ws.sections[i].id === sectionId) { secDef = ws.sections[i]; break; }
+  }
+  if (!secDef) return '';
+
+  var h = '<div class="ws-section-card">';
+  h += '<div class="ws-section-header">';
+  h += '<i class="fa-solid ' + secDef.icon + '" style="color:#4b286d;font-size:1rem;"></i>';
+  h += '<span class="ws-section-title">' + ws.label + ' &mdash; ' + secDef.label + '</span>';
+  h += '</div>';
+
+  // ── Root Cause Challenges: editable textarea ──
+  if (sectionId === 'root-cause') {
+    h += '<p style="font-size:0.78rem;color:#6b7280;margin:0 0 12px;line-height:1.6;">';
+    h += 'Document root cause challenges and findings here as they are identified during the workshop. ';
+    h += 'This content is saved to the master workbook and visible to all attendees with access.';
+    h += '</p>';
+    h += '<textarea class="editable-notes" id="notes-' + idx + '" ';
+    h += 'placeholder="e.g. Current pricing models lack SG&amp;A, making comparisons to competitors misleading...">';
+    h += '</textarea>';
+    h += '<div style="display:flex;align-items:center;gap:12px;margin-top:10px;">';
+    h += '<button class="save-btn" onclick="saveRootCause(' + idx + ')">Save Notes</button>';
+    h += '<span id="save-status-' + idx + '" style="font-size:0.7rem;color:#6b7280;"></span>';
+    h += '</div>';
+    // Load existing notes
+    loadRootCauseNotes(idx);
+  }
+
+  // ── Process Map: image or placeholder ──
+  else if (sectionId === 'process-map') {
+    h += '<div id="process-map-content-' + idx + '" class="ws-spinner">';
+    h += '<i class="fa-solid fa-spinner fa-spin"></i>';
+    h += 'Load the process map image or diagram for this workstream here.';
+    h += '</div>';
+  }
+
+  // ── All other sections: data placeholder ──
+  else {
+    h += '<div style="text-align:center;padding:48px 24px;color:#9ca3af;">';
+    h += '<i class="fa-solid fa-database" style="font-size:2.2rem;margin-bottom:16px;display:block;color:#e5e7eb;"></i>';
+    h += '<div style="font-size:0.82rem;font-weight:700;color:#4b286d;margin-bottom:8px;">' + secDef.label + '</div>';
+    h += '<div style="font-size:0.75rem;line-height:1.6;max-width:480px;margin:0 auto;">';
+    h += 'Data for this section will be populated as the workshop progresses. ';
+    h += 'Connect the Google Sheet tab to the <code>getWorkstream' + (idx + 1) + 'Data()</code> server function.';
+    h += '</div>';
+    h += '</div>';
+  }
+
+  h += '</div>'; // /ws-section-card
+  return h;
+}
+
+// ══════════════════════════════════════════════════════════
+// ROOT CAUSE NOTES — load & save via google.script.run
+// ══════════════════════════════════════════════════════════
+function loadRootCauseNotes(idx) {
+  google.script.run
+    .withSuccessHandler(function(result) {
+      try {
+        var ta = document.getElementById('notes-' + idx);
+        if (ta && result && result.notes) ta.value = result.notes;
+      } catch(e) { console.error(e); }
+    })
+    .withFailureHandler(function() {})
+    .getWorkstreamNotes(idx + 1);
+}
+
+function saveRootCause(idx) {
+  var ta = document.getElementById('notes-' + idx);
+  if (!ta) return;
+  var statusEl = document.getElementById('save-status-' + idx);
+  if (statusEl) statusEl.textContent = 'Saving...';
+  google.script.run
+    .withSuccessHandler(function(result) {
+      try {
+        var st = document.getElementById('save-status-' + idx);
+        if (st) st.textContent = result && result.success ? 'Saved.' : 'Save failed.';
+        setTimeout(function() {
+          var st2 = document.getElementById('save-status-' + idx);
+          if (st2) st2.textContent = '';
+        }, 3000);
+      } catch(e) { console.error(e); }
+    })
+    .withFailureHandler(function(err) {
+      try {
+        var st = document.getElementById('save-status-' + idx);
+        if (st) st.textContent = 'Error: ' + (err ? err.message : 'Unknown');
+      } catch(e) {}
+    })
+    .saveWorkstreamNotes(idx + 1, ta.value);
+}
+
+// ══════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════
+(function init() {
+  // Build tile grid
+  buildTileGrid();
+
+  // Show user email
+  google.script.run
+    .withSuccessHandler(function(result) {
+      try {
+        if (result && result.email) {
+          document.getElementById('nav-user').textContent = result.email;
+        }
+      } catch(e) { console.error(e); }
+    })
+    .getSessionEmail();
+})();
+</script>
+
+</body>
+</html>
