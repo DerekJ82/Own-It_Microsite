@@ -13,10 +13,6 @@
      ══════════════════════════════════════════════════════════ -->
 <div id="view-landing">
 
-  <div class="landing-top-bar">
-    <div id="nav-user" class="landing-user"></div>
-  </div>
-
   <div class="landing-hero">
     <h1>Own-It Microsite</h1>
     <p>Montreal Workshop Pre-Work Hub</p>
@@ -92,8 +88,6 @@
           <span class="ws-nav-num">05</span>Proposal &amp; Content
         </button>
       </div>
-
-      <div class="ws-nav-user" id="ws-user"></div>
 
     </div>
   </nav>
@@ -370,18 +364,6 @@ function saveRootCause(idx) {
 // INIT
 // ══════════════════════════════════════════════════════════
 (function init() {
-  google.script.run
-    .withSuccessHandler(function(result) {
-      try {
-        if (result && result.email) {
-          var el1 = document.getElementById('nav-user');
-          var el2 = document.getElementById('ws-user');
-          if (el1) { el1.textContent = result.email; }
-          if (el2) { el2.textContent = result.email; }
-        }
-      } catch(e) { console.error(e); }
-    })
-    .getSessionEmail();
 })();
 </script>
 
