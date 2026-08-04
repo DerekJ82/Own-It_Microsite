@@ -20,7 +20,7 @@ function checkAccess(permissionColumn) {
     var ownerEmail = (PropertiesService.getScriptProperties().getProperty('OWNER_EMAIL') || '').trim().toLowerCase();
     if (ownerEmail && email === ownerEmail) return true;
 
-    var ss  = SpreadsheetApp.getActiveSpreadsheet();
+    var ss  = getMasterSheet();
     var tab = ss.getSheetByName(ACCESS_TAB_NAME);
     if (!tab) {
       Logger.log('checkAccess: ' + ACCESS_TAB_NAME + ' tab not found');
@@ -71,7 +71,7 @@ function getAccessColumnDescriptions() {
 function getAccessDiag() {
   try {
     var email = Session.getEffectiveUser().getEmail().trim().toLowerCase();
-    var ss    = SpreadsheetApp.getActiveSpreadsheet();
+    var ss    = getMasterSheet();
     var tab   = ss.getSheetByName(ACCESS_TAB_NAME);
     if (!tab) return { error: ACCESS_TAB_NAME + ' tab not found', email: email };
 
@@ -94,7 +94,7 @@ function getAccessDiag() {
 }
 
 function syncAccessColumnSchema() {
-  var ss  = SpreadsheetApp.getActiveSpreadsheet();
+  var ss  = getMasterSheet();
   var tab = ss.getSheetByName(ACCESS_TAB_NAME);
   if (!tab) {
     Logger.log('syncAccessColumnSchema: ' + ACCESS_TAB_NAME + ' tab not found. Create it first.');
@@ -122,7 +122,7 @@ function installAccessRequestTrigger() {
     if (t.getHandlerFunction() === 'onEditAccessRequests') ScriptApp.deleteTrigger(t);
   });
 
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var ss = getMasterSheet();
   ScriptApp.newTrigger('onEditAccessRequests')
     .forSpreadsheet(ss)
     .onEdit()
@@ -153,7 +153,7 @@ function onEditAccessRequests(e) {
     var accessCol   = String(row[2] || '').trim().toUpperCase();
     if (!reqEmail || !accessCol) return;
 
-    var ss       = SpreadsheetApp.getActiveSpreadsheet();
+    var ss       = getMasterSheet();
     var tab      = ss.getSheetByName(ACCESS_TAB_NAME);
     if (!tab) return;
 

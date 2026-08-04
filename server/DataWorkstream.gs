@@ -3,7 +3,7 @@
 function getWorkstream1Data() {
   if (!checkAccess('WS1 PRICING')) return { error: 'ACCESS_DENIED' };
   try {
-    var ss  = SpreadsheetApp.getActiveSpreadsheet();
+    var ss  = getMasterSheet();
     var tab = ss.getSheetByName('Workstream 1 - Pricing');
     if (!tab) return { error: 'Tab not found: Workstream 1 - Pricing' };
     var rows = tab.getDataRange().getValues();
@@ -17,7 +17,7 @@ function getWorkstream1Data() {
 function getWorkstream2Data() {
   if (!checkAccess('WS2 BID GOV')) return { error: 'ACCESS_DENIED' };
   try {
-    var ss  = SpreadsheetApp.getActiveSpreadsheet();
+    var ss  = getMasterSheet();
     var tab = ss.getSheetByName('Workstream 2 - Bid Governance');
     if (!tab) return { error: 'Tab not found: Workstream 2 - Bid Governance' };
     var rows = tab.getDataRange().getValues();
@@ -31,7 +31,7 @@ function getWorkstream2Data() {
 function getWorkstream3Data() {
   if (!checkAccess('WS3 CREDIT')) return { error: 'ACCESS_DENIED' };
   try {
-    var ss  = SpreadsheetApp.getActiveSpreadsheet();
+    var ss  = getMasterSheet();
     var tab = ss.getSheetByName('Workstream 3 - Credit AR');
     if (!tab) return { error: 'Tab not found: Workstream 3 - Credit AR' };
     var rows = tab.getDataRange().getValues();
@@ -45,7 +45,7 @@ function getWorkstream3Data() {
 function getWorkstream4Data() {
   if (!checkAccess('WS4 CONTRACT')) return { error: 'ACCESS_DENIED' };
   try {
-    var ss  = SpreadsheetApp.getActiveSpreadsheet();
+    var ss  = getMasterSheet();
     var tab = ss.getSheetByName('Workstream 4 - Contract');
     if (!tab) return { error: 'Tab not found: Workstream 4 - Contract' };
     var rows = tab.getDataRange().getValues();
@@ -59,7 +59,7 @@ function getWorkstream4Data() {
 function getWorkstream5Data() {
   if (!checkAccess('WS5 PROPOSAL')) return { error: 'ACCESS_DENIED' };
   try {
-    var ss  = SpreadsheetApp.getActiveSpreadsheet();
+    var ss  = getMasterSheet();
     var tab = ss.getSheetByName('Workstream 5 - Proposal Content');
     if (!tab) return { error: 'Tab not found: Workstream 5 - Proposal Content' };
     var rows = tab.getDataRange().getValues();
@@ -73,7 +73,7 @@ function getWorkstream5Data() {
 // Notes are stored in a 'Notes' tab: col A = wsNum (1-5), col B = notes text
 function getWorkstreamNotes(wsNum) {
   try {
-    var ss  = SpreadsheetApp.getActiveSpreadsheet();
+    var ss  = getMasterSheet();
     var tab = ss.getSheetByName('Notes');
     if (!tab) return { notes: '' };
 
@@ -92,7 +92,7 @@ function getWorkstreamNotes(wsNum) {
 
 function saveWorkstreamNotes(wsNum, text) {
   try {
-    var ss  = SpreadsheetApp.getActiveSpreadsheet();
+    var ss  = getMasterSheet();
     var tab = ss.getSheetByName('Notes');
     if (!tab) {
       tab = ss.insertSheet('Notes');
