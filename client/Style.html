@@ -303,52 +303,39 @@
   .ws-accent-orange { border-left: 4px solid #ea580c; }
   .ws-accent-violet { border-left: 4px solid #9333ea; }
 
-  /* Workshop status table */
-  .status-panel {
-    width: 100%; max-width: 1100px;
-    margin-top: 28px;
-    background: rgba(255,255,255,0.08);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255,255,255,0.12);
-    border-radius: 12px;
-    padding: 20px 24px 6px;
+  /* Root cause issues table */
+  .rc-issues-table { width: 100%; border-collapse: collapse; }
+  .rct-th {
+    font-size: 0.6rem; font-weight: 700; color: rgba(43,22,63,0.42);
+    text-transform: uppercase; letter-spacing: 0.12em;
+    padding: 0 16px 10px 0; text-align: left;
+    border-bottom: 2px solid rgba(75,40,109,0.10); white-space: nowrap;
   }
-  .status-panel-title {
-    font-size: 0.6rem; font-weight: 800;
-    color: rgba(255,255,255,0.35);
-    text-transform: uppercase; letter-spacing: 0.22em;
-    margin-bottom: 14px;
+  .rct-td {
+    padding: 11px 16px 11px 0;
+    font-size: 0.82rem; color: #2B163F;
+    border-bottom: 1px solid rgba(75,40,109,0.06); vertical-align: top;
   }
-  .status-table { width: 100%; border-collapse: collapse; }
-  .st-th {
-    font-size: 0.58rem; font-weight: 700;
-    color: rgba(255,255,255,0.28);
-    text-transform: uppercase; letter-spacing: 0.15em;
-    padding: 0 8px 8px 0; text-align: left;
-    border-bottom: 1px solid rgba(255,255,255,0.07);
+  .rct-row:last-child .rct-td { border-bottom: none; }
+  .rct-row.rct-actioned .rct-issue-td { color: rgba(43,22,63,0.32); text-decoration: line-through; }
+  .rct-issue-td { line-height: 1.55; }
+  .rct-by-name { font-size: 0.78rem; font-weight: 600; }
+  .rct-by-date { font-size: 0.6rem; color: rgba(43,22,63,0.38); margin-top: 2px; }
+  .rct-act-td { text-align: center; width: 80px; }
+  .rct-crit-badge {
+    display: inline-block; font-size: 0.6rem; font-weight: 800;
+    padding: 3px 9px; border-radius: 20px;
+    text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap;
   }
-  .st-row { cursor: pointer; transition: background 0.15s; }
-  .st-row:hover { background: rgba(255,255,255,0.04); border-radius: 6px; }
-  .st-td {
-    padding: 10px 8px 10px 0;
-    font-size: 0.78rem; color: rgba(255,255,255,0.72);
-    border-bottom: 1px solid rgba(255,255,255,0.05);
-    vertical-align: middle;
-  }
-  .st-ws { font-weight: 700; }
-  .st-num-label { font-size: 0.55rem; opacity: 0.38; margin-right: 6px; }
-  .status-crit-badge {
-    display: inline-block;
-    font-size: 0.6rem; font-weight: 800;
-    padding: 2px 9px; border-radius: 20px;
-    text-transform: uppercase; letter-spacing: 0.08em;
-  }
-  .status-crit-badge.crit-high   { background: rgba(220,38,38,0.2);  color: #fca5a5; }
-  .status-crit-badge.crit-medium { background: rgba(217,119,6,0.2);   color: #fcd34d; }
-  .status-crit-badge.crit-low    { background: rgba(5,150,105,0.2);   color: #6ee7b7; }
-  .status-empty { color: rgba(255,255,255,0.18); font-size: 0.8rem; }
-  .status-act-check { color: #6ee7b7; font-size: 1rem; }
+  .rct-crit-badge.crit-high   { background: #fee2e2; color: #dc2626; }
+  .rct-crit-badge.crit-medium { background: #fef3c7; color: #d97706; }
+  .rct-crit-badge.crit-low    { background: #d1fae5; color: #059669; }
+  .rct-empty { color: rgba(43,22,63,0.25); }
+  .rc-table-area { margin-bottom: 0; }
+  .rc-loading-msg { font-size: 0.82rem; color: rgba(43,22,63,0.38); font-style: italic; }
+  .rc-add-section { margin-top: 28px; padding-top: 22px; border-top: 1.5px dashed rgba(75,40,109,0.14); }
+  .rc-add-title { font-size: 0.62rem; font-weight: 800; color: rgba(43,22,63,0.45); text-transform: uppercase; letter-spacing: 0.14em; margin-bottom: 12px; }
+  .rc-add-ta { min-height: 90px; }
 
   /* Actioned indicators */
   .rc-actioned-dot {

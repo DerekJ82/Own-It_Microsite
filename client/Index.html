@@ -57,19 +57,6 @@
 
   </div>
 
-  <div class="status-panel">
-    <div class="status-panel-title">Root Cause Status</div>
-    <table class="status-table">
-      <thead>
-        <tr>
-          <th class="st-th">Workstream</th>
-          <th class="st-th">Criticality</th>
-          <th class="st-th">Actioned</th>
-        </tr>
-      </thead>
-      <tbody id="status-table-body"></tbody>
-    </table>
-  </div>
 
 </div><!-- /view-landing -->
 
@@ -239,38 +226,9 @@ var SECTION_META = {
 // ══════════════════════════════════════════════════════════
 var currentWsIdx = -1;
 var WS_ACTIONED = {};
-var WS_CRITICALITY = {};
-
-function updateStatusRow(idx, result) {
-  var crit     = (result && result.criticality) ? result.criticality : '';
-  var actioned = result && (result.actioned === true || result.actioned === 'TRUE');
-  if (crit) { WS_CRITICALITY[idx] = crit; }
-
-  var critCell = document.getElementById('status-crit-' + idx);
-  if (critCell) {
-    critCell.innerHTML = crit
-      ? '<span class="status-crit-badge crit-' + crit.toLowerCase() + '">' + crit + '</span>'
-      : '<span class="status-empty">—</span>';
-  }
-  setActionedIndicator(idx, actioned);
-}
-
-function loadAllActionedStatus() {
-  for (var i = 0; i < OI_WORKSTREAMS.length; i++) {
-    (function(idx) {
-      google.script.run
-        .withSuccessHandler(function(result) {
-          try { updateStatusRow(idx, result || {}); } catch(e) {}
-        })
-        .withFailureHandler(function() {})
-        .getWorkstreamNotes(idx + 1);
-    })(i);
-  }
-}
 
 function setActionedIndicator(idx, actioned) {
   WS_ACTIONED[idx] = actioned;
-
   var tabEl = document.getElementById('sec-tab-' + idx + '-root-cause');
   if (tabEl) {
     var dot = tabEl.querySelector('.rc-actioned-dot');
@@ -282,27 +240,6 @@ function setActionedIndicator(idx, actioned) {
       dot.remove();
     }
   }
-
-  var cardEl = document.getElementById('portal-card-' + idx);
-  if (cardEl) {
-    var badge = cardEl.querySelector('.card-actioned-badge');
-    if (actioned && !badge) {
-      var b = document.createElement('div');
-      b.className = 'card-actioned-badge';
-      b.title = 'Actioned during session';
-      b.innerHTML = '<i class="fas fa-check"></i>';
-      cardEl.appendChild(b);
-    } else if (!actioned && badge) {
-      badge.remove();
-    }
-  }
-
-  var actCell = document.getElementById('status-act-' + idx);
-  if (actCell) {
-    actCell.innerHTML = actioned
-      ? '<i class="fas fa-check-circle status-act-check"></i>'
-      : '<span class="status-empty">—</span>';
-  }
 }
 
 function goHome() {
@@ -310,9 +247,6 @@ function goHome() {
   document.getElementById('view-ws').style.display = 'none';
   document.getElementById('view-ws').classList.remove('active');
   currentWsIdx = -1;
-  for (var i = 0; i < OI_WORKSTREAMS.length; i++) {
-    updateStatusRow(i, { criticality: WS_CRITICALITY[i] || '', actioned: WS_ACTIONED[i] === true });
-  }
 }
 
 function openWorkstream(idx) {
@@ -379,28 +313,24 @@ function buildSectionContent(idx, sectionId) {
 
   if (sectionId === 'root-cause') {
     return '<div class="content-card ' + accent + '">' +
-      '<div class="content-card-header"><i class="fas fa-triangle-exclamation"></i>Root Cause Challenges To Be Addressed</div>' +
-      '<div class="rc-meta-row">' +
-        '<div class="rc-meta-item">' +
-          '<span class="rc-label">Criticality</span>' +
-          '<select id="criticality-' + idx + '" class="rc-select" onchange="updateCriticalityStyle(' + idx + ')">' +
-            '<option value="">-- Select --</option>' +
-            '<option value="High">High</option>' +
-            '<option value="Medium">Medium</option>' +
-            '<option value="Low">Low</option>' +
-          '</select>' +
+      '<div class="content-card-header"><i class="fas fa-triangle-exclamation"></i>Root Cause Challenges</div>' +
+      '<div id="rc-table-' + idx + '" class="rc-table-area"><p class="rc-loading-msg">Loading challenges...</p></div>' +
+      '<div class="rc-add-section">' +
+        '<div class="rc-add-title">Add Challenge</div>' +
+        '<textarea id="rc-new-issue-' + idx + '" class="root-cause-ta rc-add-ta" placeholder="Describe the root cause challenge..."></textarea>' +
+        '<div class="rc-meta-row">' +
+          '<div class="rc-meta-item">' +
+            '<span class="rc-label">Criticality</span>' +
+            '<select id="rc-new-crit-' + idx + '" class="rc-select">' +
+              '<option value="">— Select —</option>' +
+              '<option value="High">High</option>' +
+              '<option value="Medium">Medium</option>' +
+              '<option value="Low">Low</option>' +
+            '</select>' +
+          '</div>' +
+          '<button class="save-btn" onclick="addRootCauseNote(' + idx + ')">Add</button>' +
+          '<span class="save-status" id="rc-add-status-' + idx + '"></span>' +
         '</div>' +
-        '<div class="rc-meta-item">' +
-          '<label class="rc-checkbox-label">' +
-            '<input type="checkbox" id="actioned-' + idx + '" class="rc-checkbox" onchange="setActionedIndicator(' + idx + ', this.checked)">' +
-            'Actioned during session' +
-          '</label>' +
-        '</div>' +
-      '</div>' +
-      '<textarea id="notes-' + idx + '" class="root-cause-ta" placeholder="Document root cause challenges here as they are identified during the workshop..."></textarea>' +
-      '<div class="save-row">' +
-        '<button class="save-btn" onclick="saveRootCause(' + idx + ')">Save</button>' +
-        '<span class="save-status" id="save-status-' + idx + '"></span>' +
       '</div>' +
     '</div>';
   }
@@ -422,85 +352,118 @@ function buildSectionContent(idx, sectionId) {
 // ══════════════════════════════════════════════════════════
 // ROOT CAUSE NOTES
 // ══════════════════════════════════════════════════════════
+function escHtml(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
 function loadRootCauseNotes(idx) {
   google.script.run
     .withSuccessHandler(function(result) {
       try {
-        var ta  = document.getElementById('notes-' + idx);
-        var sel = document.getElementById('criticality-' + idx);
-        var cb  = document.getElementById('actioned-' + idx);
-        if (ta && result && result.notes)       { ta.value  = result.notes; }
-        if (sel && result && result.criticality){ sel.value = result.criticality; updateCriticalityStyle(idx); }
-        var isActioned = result && (result.actioned === true || result.actioned === 'TRUE');
-        if (cb) { cb.checked = isActioned; }
-        setActionedIndicator(idx, isActioned);
+        renderRootCauseTable(idx, result && result.rows ? result.rows : []);
       } catch(e) { console.error(e); }
     })
-    .withFailureHandler(function() {})
+    .withFailureHandler(function() {
+      try {
+        var w = document.getElementById('rc-table-' + idx);
+        if (w) w.innerHTML = '<div class="content-placeholder">Could not load challenges.</div>';
+      } catch(e) {}
+    })
     .getWorkstreamNotes(idx + 1);
 }
 
-function updateCriticalityStyle(idx) {
-  var sel = document.getElementById('criticality-' + idx);
-  if (!sel) return;
-  sel.className = 'rc-select';
-  if (sel.value === 'High')   { sel.classList.add('crit-high'); }
-  if (sel.value === 'Medium') { sel.classList.add('crit-med');  }
-  if (sel.value === 'Low')    { sel.classList.add('crit-low');  }
+function renderRootCauseTable(idx, rows) {
+  var wrapper = document.getElementById('rc-table-' + idx);
+  if (!wrapper) return;
+
+  if (!rows || !rows.length) {
+    wrapper.innerHTML = '<div class="content-placeholder"><i class="fas fa-circle-info"></i> No challenges added yet. Use the form below to add the first one.</div>';
+    setActionedIndicator(idx, false);
+    return;
+  }
+
+  var allActioned = true;
+  for (var i = 0; i < rows.length; i++) { if (!rows[i].actioned) { allActioned = false; break; } }
+  setActionedIndicator(idx, allActioned);
+
+  var html = '<table class="rc-issues-table"><thead><tr>' +
+    '<th class="rct-th">Challenge</th>' +
+    '<th class="rct-th">Criticality</th>' +
+    '<th class="rct-th">Submitted By</th>' +
+    '<th class="rct-th">Actioned</th>' +
+    '</tr></thead><tbody>';
+
+  for (var j = 0; j < rows.length; j++) {
+    var r = rows[j];
+    var critBadge = r.criticality
+      ? '<span class="rct-crit-badge crit-' + r.criticality.toLowerCase() + '">' + escHtml(r.criticality) + '</span>'
+      : '<span class="rct-empty">—</span>';
+    var byName = r.submittedBy ? r.submittedBy.split('@')[0] : '—';
+    html += '<tr class="rct-row' + (r.actioned ? ' rct-actioned' : '') + '">' +
+      '<td class="rct-td rct-issue-td">' + escHtml(r.issue) + '</td>' +
+      '<td class="rct-td">' + critBadge + '</td>' +
+      '<td class="rct-td rct-by-td"><div class="rct-by-name">' + escHtml(byName) + '</div><div class="rct-by-date">' + escHtml(r.submittedAt) + '</div></td>' +
+      '<td class="rct-td rct-act-td"><input type="checkbox" class="rc-checkbox"' + (r.actioned ? ' checked' : '') + ' onchange="toggleActioned(' + r.rowNum + ',' + idx + ',this)"></td>' +
+      '</tr>';
+  }
+
+  html += '</tbody></table>';
+  wrapper.innerHTML = html;
 }
 
-function saveRootCause(idx) {
-  var ta  = document.getElementById('notes-' + idx);
-  if (!ta) return;
-  var sel  = document.getElementById('criticality-' + idx);
-  var cb   = document.getElementById('actioned-' + idx);
-  var crit = sel ? sel.value : '';
-  var act  = cb  ? cb.checked : false;
-  var statusEl = document.getElementById('save-status-' + idx);
-  if (statusEl) { statusEl.textContent = 'Saving...'; }
+function addRootCauseNote(idx) {
+  var ta   = document.getElementById('rc-new-issue-' + idx);
+  var sel  = document.getElementById('rc-new-crit-' + idx);
+  var stat = document.getElementById('rc-add-status-' + idx);
+  if (!ta || !ta.value.trim()) return;
+  var issue = ta.value.trim();
+  var crit  = sel ? sel.value : '';
+  if (stat) stat.textContent = 'Adding...';
   google.script.run
     .withSuccessHandler(function(result) {
       try {
-        var st = document.getElementById('save-status-' + idx);
-        if (st) { st.textContent = result && result.success ? 'Saved.' : 'Save failed.'; }
         if (result && result.success) {
-          updateStatusRow(idx, { criticality: crit, actioned: act });
+          ta.value = '';
+          if (sel) sel.value = '';
+          if (stat) stat.textContent = '';
+          loadRootCauseNotes(idx);
+        } else {
+          if (stat) stat.textContent = 'Failed.';
         }
-        setTimeout(function() {
-          try {
-            var st2 = document.getElementById('save-status-' + idx);
-            if (st2) { st2.textContent = ''; }
-          } catch(e) {}
-        }, 3000);
-      } catch(e) { console.error(e); }
-    })
-    .withFailureHandler(function(err) {
-      try {
-        var st = document.getElementById('save-status-' + idx);
-        if (st) { st.textContent = 'Error: ' + (err ? err.message : 'Unknown'); }
       } catch(e) {}
     })
-    .saveWorkstreamNotes(idx + 1, ta.value, crit, act);
+    .withFailureHandler(function() {
+      try { if (stat) stat.textContent = 'Error.'; } catch(e) {}
+    })
+    .addWorkstreamNote(idx + 1, issue, crit);
+}
+
+function toggleActioned(rowNum, idx, el) {
+  var actioned = el.checked;
+  var row = el.closest ? el.closest('tr') : null;
+  if (row) {
+    if (actioned) row.classList.add('rct-actioned');
+    else row.classList.remove('rct-actioned');
+  }
+  google.script.run
+    .withSuccessHandler(function(result) {
+      try {
+        if (result && result.success) {
+          var allChecked = true;
+          var cbs = document.querySelectorAll('#rc-table-' + idx + ' .rc-checkbox');
+          for (var i = 0; i < cbs.length; i++) { if (!cbs[i].checked) { allChecked = false; break; } }
+          setActionedIndicator(idx, allChecked && cbs.length > 0);
+        }
+      } catch(e) {}
+    })
+    .withFailureHandler(function() {})
+    .setNoteActioned(rowNum, actioned);
 }
 
 // ══════════════════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════════════════
 (function init() {
-  var tbody = document.getElementById('status-table-body');
-  if (tbody) {
-    var rows = '';
-    for (var i = 0; i < OI_WORKSTREAMS.length; i++) {
-      var ws = OI_WORKSTREAMS[i];
-      rows += '<tr class="st-row" onclick="openWorkstream(' + i + ')">' +
-        '<td class="st-td st-ws"><span class="st-num-label">' + ws.num + '</span>' + ws.label + '</td>' +
-        '<td class="st-td" id="status-crit-' + i + '"><span class="status-empty">—</span></td>' +
-        '<td class="st-td" id="status-act-' + i + '"><span class="status-empty">—</span></td>' +
-        '</tr>';
-    }
-    tbody.innerHTML = rows;
-  }
-  loadAllActionedStatus();
 })();
 </script>
 

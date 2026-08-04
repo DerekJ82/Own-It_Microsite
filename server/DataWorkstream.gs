@@ -70,58 +70,69 @@ function getWorkstream5Data() {
   }
 }
 
-// Notes tab: A=WorkstreamNum, B=Notes, C=Criticality, D=Actioned, E=Last Updated By, F=Last Updated At
+// Notes tab: A=WorkstreamNum, B=Issue, C=Criticality, D=Actioned, E=Submitted By, F=Submitted At
 function getWorkstreamNotes(wsNum) {
   try {
     var ss  = getMasterSheet();
     var tab = ss.getSheetByName('Notes');
-    if (!tab) return { notes: '', criticality: '', actioned: false };
-
+    if (!tab) return { rows: [] };
     var data = tab.getDataRange().getValues();
-    for (var i = 0; i < data.length; i++) {
+    var rows = [];
+    for (var i = 1; i < data.length; i++) {
       if (String(data[i][0]).trim() === String(wsNum)) {
-        return {
-          notes:       String(data[i][1] || ''),
+        var ts = data[i][5];
+        var tsStr = '';
+        try { tsStr = ts ? Utilities.formatDate(new Date(ts), Session.getScriptTimeZone(), 'MMM d HH:mm') : ''; } catch(e2) {}
+        rows.push({
+          rowNum:      i + 1,
+          issue:       String(data[i][1] || ''),
           criticality: String(data[i][2] || ''),
-          actioned:    data[i][3] === true || data[i][3] === 'TRUE'
-        };
+          actioned:    data[i][3] === true || String(data[i][3]).toUpperCase() === 'TRUE',
+          submittedBy: String(data[i][4] || ''),
+          submittedAt: tsStr
+        });
       }
     }
-    return { notes: '', criticality: '', actioned: false };
+    return { rows: rows };
   } catch (e) {
     Logger.log('getWorkstreamNotes error: ' + e.message);
-    return { notes: '', criticality: '', actioned: false };
+    return { rows: [] };
   }
 }
 
-function saveWorkstreamNotes(wsNum, text, criticality, actioned) {
+function addWorkstreamNote(wsNum, issue, criticality) {
   try {
-    var ss    = getMasterSheet();
-    var tab   = ss.getSheetByName('Notes');
+    var ss  = getMasterSheet();
+    var tab = ss.getSheetByName('Notes');
     if (!tab) {
       tab = ss.insertSheet('Notes');
-      tab.getRange(1, 1, 1, 6).setValues([['WorkstreamNum', 'Notes', 'Criticality', 'Actioned', 'Last Updated By', 'Last Updated At']]);
+      tab.getRange(1, 1, 1, 6).setValues([['WorkstreamNum', 'Issue', 'Criticality', 'Actioned', 'Submitted By', 'Submitted At']]);
     }
-
-    var email = Session.getEffectiveUser().getEmail();
-    var now   = new Date();
-    var crit  = criticality || '';
-    var act   = actioned ? true : false;
-    var data  = tab.getDataRange().getValues();
-
-    for (var i = 1; i < data.length; i++) {
-      if (String(data[i][0]).trim() === String(wsNum)) {
-        tab.getRange(i + 1, 2, 1, 5).setValues([[text, crit, act, email, now]]);
-        return { success: true };
-      }
-    }
-
-    // No existing row — append
+    var email   = Session.getEffectiveUser().getEmail();
+    var now     = new Date();
     var nextRow = tab.getLastRow() + 1;
-    tab.getRange(nextRow, 1, 1, 6).setValues([[wsNum, text, crit, act, email, now]]);
+    tab.getRange(nextRow, 1, 1, 6).setValues([[Number(wsNum), issue, criticality || '', false, email, now]]);
+    var tsStr = '';
+    try { tsStr = Utilities.formatDate(now, Session.getScriptTimeZone(), 'MMM d HH:mm'); } catch(e2) {}
+    return {
+      success: true,
+      row: { rowNum: nextRow, issue: issue, criticality: criticality || '', actioned: false, submittedBy: email, submittedAt: tsStr }
+    };
+  } catch (e) {
+    Logger.log('addWorkstreamNote error: ' + e.message);
+    return { success: false, error: e.message };
+  }
+}
+
+function setNoteActioned(rowNum, actioned) {
+  try {
+    var ss  = getMasterSheet();
+    var tab = ss.getSheetByName('Notes');
+    if (!tab) return { success: false, error: 'Notes tab not found' };
+    tab.getRange(rowNum, 4).setValue(actioned ? true : false);
     return { success: true };
   } catch (e) {
-    Logger.log('saveWorkstreamNotes error: ' + e.message);
+    Logger.log('setNoteActioned error: ' + e.message);
     return { success: false, error: e.message };
   }
 }
