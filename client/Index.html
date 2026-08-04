@@ -20,35 +20,35 @@
 
   <div class="portal-grid">
 
-    <div class="portal-card" onclick="openWorkstream(0)">
+    <div class="portal-card" id="portal-card-0" onclick="openWorkstream(0)">
       <div class="card-num">Workstream 01</div>
       <div class="card-icon"><i class="fas fa-dollar-sign"></i></div>
       <div class="card-title">Pricing</div>
       <div class="card-desc">Deal support, win/loss, cost modelling &amp; AI tools</div>
     </div>
 
-    <div class="portal-card" onclick="openWorkstream(1)">
+    <div class="portal-card" id="portal-card-1" onclick="openWorkstream(1)">
       <div class="card-num">Workstream 02</div>
       <div class="card-icon"><i class="fas fa-sitemap"></i></div>
       <div class="card-title">Bid Governance</div>
       <div class="card-desc">Approval matrix, volumes &amp; waiver automation</div>
     </div>
 
-    <div class="portal-card" onclick="openWorkstream(2)">
+    <div class="portal-card" id="portal-card-2" onclick="openWorkstream(2)">
       <div class="card-num">Workstream 03</div>
       <div class="card-icon"><i class="fas fa-shield-halved"></i></div>
       <div class="card-title">Credit / A-R</div>
       <div class="card-desc">Policy rules, decision criteria &amp; documentation</div>
     </div>
 
-    <div class="portal-card" onclick="openWorkstream(3)">
+    <div class="portal-card" id="portal-card-3" onclick="openWorkstream(3)">
       <div class="card-num">Workstream 04</div>
       <div class="card-icon"><i class="fas fa-file-contract"></i></div>
       <div class="card-title">Contract</div>
       <div class="card-desc">Clause pain points, process changes &amp; AI tools</div>
     </div>
 
-    <div class="portal-card" onclick="openWorkstream(4)">
+    <div class="portal-card" id="portal-card-4" onclick="openWorkstream(4)">
       <div class="card-num">Workstream 05</div>
       <div class="card-icon"><i class="fas fa-lightbulb"></i></div>
       <div class="card-title">Proposal &amp; Content</div>
@@ -223,12 +223,46 @@ var SECTION_META = {
 // NAVIGATION
 // ══════════════════════════════════════════════════════════
 var currentWsIdx = -1;
+var WS_ACTIONED = {};
+
+function setActionedIndicator(idx, actioned) {
+  WS_ACTIONED[idx] = actioned;
+
+  var tabEl = document.getElementById('sec-tab-' + idx + '-root-cause');
+  if (tabEl) {
+    var dot = tabEl.querySelector('.rc-actioned-dot');
+    if (actioned && !dot) {
+      var d = document.createElement('span');
+      d.className = 'rc-actioned-dot';
+      tabEl.appendChild(d);
+    } else if (!actioned && dot) {
+      dot.remove();
+    }
+  }
+
+  var cardEl = document.getElementById('portal-card-' + idx);
+  if (cardEl) {
+    var badge = cardEl.querySelector('.card-actioned-badge');
+    if (actioned && !badge) {
+      var b = document.createElement('div');
+      b.className = 'card-actioned-badge';
+      b.title = 'Actioned during session';
+      b.innerHTML = '<i class="fas fa-check"></i>';
+      cardEl.appendChild(b);
+    } else if (!actioned && badge) {
+      badge.remove();
+    }
+  }
+}
 
 function goHome() {
   document.getElementById('view-landing').style.display = 'flex';
   document.getElementById('view-ws').style.display = 'none';
   document.getElementById('view-ws').classList.remove('active');
   currentWsIdx = -1;
+  for (var i = 0; i < OI_WORKSTREAMS.length; i++) {
+    setActionedIndicator(i, WS_ACTIONED[i] === true);
+  }
 }
 
 function openWorkstream(idx) {
@@ -258,7 +292,7 @@ function renderWorkstream(idx, activeSectionId) {
   for (var t = 0; t < ws.sections.length; t++) {
     var sec = ws.sections[t];
     var activeClass = (sec.id === activeSectionId) ? ' active' : '';
-    tabsHtml += '<button class="section-tab' + activeClass + '" onclick="switchSection(' + idx + ',\'' + sec.id + '\')">';
+    tabsHtml += '<button class="section-tab' + activeClass + '" id="sec-tab-' + idx + '-' + sec.id + '" onclick="switchSection(' + idx + ',\'' + sec.id + '\')">';
     tabsHtml += '<i class="fas ' + sec.icon + '"></i>' + sec.label;
     tabsHtml += '</button>';
   }
@@ -308,7 +342,7 @@ function buildSectionContent(idx, sectionId) {
         '</div>' +
         '<div class="rc-meta-item">' +
           '<label class="rc-checkbox-label">' +
-            '<input type="checkbox" id="actioned-' + idx + '" class="rc-checkbox">' +
+            '<input type="checkbox" id="actioned-' + idx + '" class="rc-checkbox" onchange="setActionedIndicator(' + idx + ', this.checked)">' +
             'Actioned during session' +
           '</label>' +
         '</div>' +
@@ -347,7 +381,9 @@ function loadRootCauseNotes(idx) {
         var cb  = document.getElementById('actioned-' + idx);
         if (ta && result && result.notes)       { ta.value  = result.notes; }
         if (sel && result && result.criticality){ sel.value = result.criticality; updateCriticalityStyle(idx); }
-        if (cb  && result)                      { cb.checked = result.actioned === true || result.actioned === 'TRUE'; }
+        var isActioned = result && (result.actioned === true || result.actioned === 'TRUE');
+        if (cb) { cb.checked = isActioned; }
+        setActionedIndicator(idx, isActioned);
       } catch(e) { console.error(e); }
     })
     .withFailureHandler(function() {})

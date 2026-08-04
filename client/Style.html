@@ -81,6 +81,7 @@
     display: flex; flex-direction: column;
     justify-content: center; align-items: center;
     min-height: 150px;
+    position: relative;
   }
   .portal-card:hover {
     background: rgba(255,255,255,0.20);
@@ -301,6 +302,27 @@
   .ws-accent-green  { border-left: 4px solid #059669; }
   .ws-accent-orange { border-left: 4px solid #ea580c; }
   .ws-accent-violet { border-left: 4px solid #9333ea; }
+
+  /* Actioned indicators */
+  .rc-actioned-dot {
+    display: inline-block;
+    width: 7px; height: 7px;
+    background: #059669;
+    border-radius: 50%;
+    margin-left: 5px;
+    vertical-align: middle;
+    flex-shrink: 0;
+  }
+  .card-actioned-badge {
+    position: absolute;
+    top: 10px; right: 10px;
+    background: rgba(5,150,105,0.85);
+    color: #fff;
+    font-size: 0.65rem;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+  }
 
   .hidden { display: none !important; }
 
