@@ -296,6 +296,23 @@ function buildSectionContent(idx, sectionId) {
   if (sectionId === 'root-cause') {
     return '<div class="content-card ' + accent + '">' +
       '<div class="content-card-header"><i class="fas fa-triangle-exclamation"></i>Root Cause Challenges To Be Addressed</div>' +
+      '<div class="rc-meta-row">' +
+        '<div class="rc-meta-item">' +
+          '<span class="rc-label">Criticality</span>' +
+          '<select id="criticality-' + idx + '" class="rc-select" onchange="updateCriticalityStyle(' + idx + ')">' +
+            '<option value="">-- Select --</option>' +
+            '<option value="High">High</option>' +
+            '<option value="Medium">Medium</option>' +
+            '<option value="Low">Low</option>' +
+          '</select>' +
+        '</div>' +
+        '<div class="rc-meta-item">' +
+          '<label class="rc-checkbox-label">' +
+            '<input type="checkbox" id="actioned-' + idx + '" class="rc-checkbox">' +
+            'Actioned during session' +
+          '</label>' +
+        '</div>' +
+      '</div>' +
       '<textarea id="notes-' + idx + '" class="root-cause-ta" placeholder="Document root cause challenges here as they are identified during the workshop..."></textarea>' +
       '<div class="save-row">' +
         '<button class="save-btn" onclick="saveRootCause(' + idx + ')">Save</button>' +
@@ -325,17 +342,34 @@ function loadRootCauseNotes(idx) {
   google.script.run
     .withSuccessHandler(function(result) {
       try {
-        var ta = document.getElementById('notes-' + idx);
-        if (ta && result && result.notes) { ta.value = result.notes; }
+        var ta  = document.getElementById('notes-' + idx);
+        var sel = document.getElementById('criticality-' + idx);
+        var cb  = document.getElementById('actioned-' + idx);
+        if (ta && result && result.notes)       { ta.value  = result.notes; }
+        if (sel && result && result.criticality){ sel.value = result.criticality; updateCriticalityStyle(idx); }
+        if (cb  && result)                      { cb.checked = result.actioned === true || result.actioned === 'TRUE'; }
       } catch(e) { console.error(e); }
     })
     .withFailureHandler(function() {})
     .getWorkstreamNotes(idx + 1);
 }
 
+function updateCriticalityStyle(idx) {
+  var sel = document.getElementById('criticality-' + idx);
+  if (!sel) return;
+  sel.className = 'rc-select';
+  if (sel.value === 'High')   { sel.classList.add('crit-high'); }
+  if (sel.value === 'Medium') { sel.classList.add('crit-med');  }
+  if (sel.value === 'Low')    { sel.classList.add('crit-low');  }
+}
+
 function saveRootCause(idx) {
-  var ta = document.getElementById('notes-' + idx);
+  var ta  = document.getElementById('notes-' + idx);
   if (!ta) return;
+  var sel  = document.getElementById('criticality-' + idx);
+  var cb   = document.getElementById('actioned-' + idx);
+  var crit = sel ? sel.value : '';
+  var act  = cb  ? cb.checked : false;
   var statusEl = document.getElementById('save-status-' + idx);
   if (statusEl) { statusEl.textContent = 'Saving...'; }
   google.script.run
@@ -357,7 +391,7 @@ function saveRootCause(idx) {
         if (st) { st.textContent = 'Error: ' + (err ? err.message : 'Unknown'); }
       } catch(e) {}
     })
-    .saveWorkstreamNotes(idx + 1, ta.value);
+    .saveWorkstreamNotes(idx + 1, ta.value, crit, act);
 }
 
 // ══════════════════════════════════════════════════════════

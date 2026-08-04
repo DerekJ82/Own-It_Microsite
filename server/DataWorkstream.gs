@@ -70,49 +70,55 @@ function getWorkstream5Data() {
   }
 }
 
-// Notes are stored in a 'Notes' tab: col A = wsNum (1-5), col B = notes text
+// Notes tab: A=WorkstreamNum, B=Notes, C=Criticality, D=Actioned, E=Last Updated By, F=Last Updated At
 function getWorkstreamNotes(wsNum) {
   try {
     var ss  = getMasterSheet();
     var tab = ss.getSheetByName('Notes');
-    if (!tab) return { notes: '' };
+    if (!tab) return { notes: '', criticality: '', actioned: false };
 
     var data = tab.getDataRange().getValues();
     for (var i = 0; i < data.length; i++) {
       if (String(data[i][0]).trim() === String(wsNum)) {
-        return { notes: String(data[i][1] || '') };
+        return {
+          notes:       String(data[i][1] || ''),
+          criticality: String(data[i][2] || ''),
+          actioned:    data[i][3] === true || data[i][3] === 'TRUE'
+        };
       }
     }
-    return { notes: '' };
+    return { notes: '', criticality: '', actioned: false };
   } catch (e) {
     Logger.log('getWorkstreamNotes error: ' + e.message);
-    return { notes: '' };
+    return { notes: '', criticality: '', actioned: false };
   }
 }
 
-function saveWorkstreamNotes(wsNum, text) {
+function saveWorkstreamNotes(wsNum, text, criticality, actioned) {
   try {
     var ss    = getMasterSheet();
     var tab   = ss.getSheetByName('Notes');
     if (!tab) {
       tab = ss.insertSheet('Notes');
-      tab.getRange(1, 1, 1, 4).setValues([['WorkstreamNum', 'Notes', 'Last Updated By', 'Last Updated At']]);
+      tab.getRange(1, 1, 1, 6).setValues([['WorkstreamNum', 'Notes', 'Criticality', 'Actioned', 'Last Updated By', 'Last Updated At']]);
     }
 
     var email = Session.getEffectiveUser().getEmail();
     var now   = new Date();
+    var crit  = criticality || '';
+    var act   = actioned ? true : false;
     var data  = tab.getDataRange().getValues();
 
     for (var i = 1; i < data.length; i++) {
       if (String(data[i][0]).trim() === String(wsNum)) {
-        tab.getRange(i + 1, 2, 1, 3).setValues([[text, email, now]]);
+        tab.getRange(i + 1, 2, 1, 5).setValues([[text, crit, act, email, now]]);
         return { success: true };
       }
     }
 
     // No existing row — append
     var nextRow = tab.getLastRow() + 1;
-    tab.getRange(nextRow, 1, 1, 4).setValues([[wsNum, text, email, now]]);
+    tab.getRange(nextRow, 1, 1, 6).setValues([[wsNum, text, crit, act, email, now]]);
     return { success: true };
   } catch (e) {
     Logger.log('saveWorkstreamNotes error: ' + e.message);

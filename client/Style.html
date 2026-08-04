@@ -234,6 +234,41 @@
     border-radius: 9px; padding: 22px 24px;
   }
 
+  /* Root cause meta row (criticality + actioned) */
+  .rc-meta-row {
+    display: flex; gap: 20px; align-items: center;
+    margin-bottom: 14px; flex-wrap: wrap;
+    padding: 12px 14px;
+    background: #faf8fc;
+    border: 1px solid rgba(75,40,109,0.10);
+    border-radius: 8px;
+  }
+  .rc-meta-item { display: flex; align-items: center; gap: 8px; }
+  .rc-label {
+    font-size: 0.68rem; font-weight: 700;
+    color: rgba(43,22,63,0.55);
+    text-transform: uppercase; letter-spacing: 0.1em;
+  }
+  .rc-select {
+    font-size: 0.78rem; font-weight: 600; color: #2A2C2E;
+    border: 1.5px solid rgba(75,40,109,0.2); border-radius: 6px;
+    padding: 5px 10px; background: #fff; cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .rc-select:focus { outline: none; border-color: #4b286d; }
+  .rc-select.crit-high  { border-color: #dc2626; color: #dc2626; }
+  .rc-select.crit-med   { border-color: #d97706; color: #d97706; }
+  .rc-select.crit-low   { border-color: #059669; color: #059669; }
+  .rc-checkbox-label {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 0.78rem; font-weight: 600; color: #2A2C2E;
+    cursor: pointer;
+  }
+  .rc-checkbox {
+    width: 16px; height: 16px;
+    accent-color: #4b286d; cursor: pointer; flex-shrink: 0;
+  }
+
   /* Root cause textarea */
   .root-cause-ta {
     width: 100%; min-height: 300px;
