@@ -92,26 +92,27 @@ function getWorkstreamNotes(wsNum) {
 
 function saveWorkstreamNotes(wsNum, text) {
   try {
-    var ss  = getMasterSheet();
-    var tab = ss.getSheetByName('Notes');
+    var ss    = getMasterSheet();
+    var tab   = ss.getSheetByName('Notes');
     if (!tab) {
       tab = ss.insertSheet('Notes');
-      tab.getRange(1, 1).setValue('WorkstreamNum');
-      tab.getRange(1, 2).setValue('Notes');
+      tab.getRange(1, 1, 1, 4).setValues([['WorkstreamNum', 'Notes', 'Last Updated By', 'Last Updated At']]);
     }
 
-    var data = tab.getDataRange().getValues();
+    var email = Session.getEffectiveUser().getEmail();
+    var now   = new Date();
+    var data  = tab.getDataRange().getValues();
+
     for (var i = 1; i < data.length; i++) {
       if (String(data[i][0]).trim() === String(wsNum)) {
-        tab.getRange(i + 1, 2).setValue(text);
+        tab.getRange(i + 1, 2, 1, 3).setValues([[text, email, now]]);
         return { success: true };
       }
     }
 
     // No existing row — append
     var nextRow = tab.getLastRow() + 1;
-    tab.getRange(nextRow, 1).setValue(wsNum);
-    tab.getRange(nextRow, 2).setValue(text);
+    tab.getRange(nextRow, 1, 1, 4).setValues([[wsNum, text, email, now]]);
     return { success: true };
   } catch (e) {
     Logger.log('saveWorkstreamNotes error: ' + e.message);
