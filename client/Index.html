@@ -56,6 +56,21 @@
     </div>
 
   </div>
+
+  <div class="status-panel">
+    <div class="status-panel-title">Root Cause Status</div>
+    <table class="status-table">
+      <thead>
+        <tr>
+          <th class="st-th">Workstream</th>
+          <th class="st-th">Criticality</th>
+          <th class="st-th">Actioned</th>
+        </tr>
+      </thead>
+      <tbody id="status-table-body"></tbody>
+    </table>
+  </div>
+
 </div><!-- /view-landing -->
 
 
@@ -224,6 +239,34 @@ var SECTION_META = {
 // ══════════════════════════════════════════════════════════
 var currentWsIdx = -1;
 var WS_ACTIONED = {};
+var WS_CRITICALITY = {};
+
+function updateStatusRow(idx, result) {
+  var crit     = (result && result.criticality) ? result.criticality : '';
+  var actioned = result && (result.actioned === true || result.actioned === 'TRUE');
+  if (crit) { WS_CRITICALITY[idx] = crit; }
+
+  var critCell = document.getElementById('status-crit-' + idx);
+  if (critCell) {
+    critCell.innerHTML = crit
+      ? '<span class="status-crit-badge crit-' + crit.toLowerCase() + '">' + crit + '</span>'
+      : '<span class="status-empty">—</span>';
+  }
+  setActionedIndicator(idx, actioned);
+}
+
+function loadAllActionedStatus() {
+  for (var i = 0; i < OI_WORKSTREAMS.length; i++) {
+    (function(idx) {
+      google.script.run
+        .withSuccessHandler(function(result) {
+          try { updateStatusRow(idx, result || {}); } catch(e) {}
+        })
+        .withFailureHandler(function() {})
+        .getWorkstreamNotes(idx + 1);
+    })(i);
+  }
+}
 
 function setActionedIndicator(idx, actioned) {
   WS_ACTIONED[idx] = actioned;
@@ -253,6 +296,13 @@ function setActionedIndicator(idx, actioned) {
       badge.remove();
     }
   }
+
+  var actCell = document.getElementById('status-act-' + idx);
+  if (actCell) {
+    actCell.innerHTML = actioned
+      ? '<i class="fas fa-check-circle status-act-check"></i>'
+      : '<span class="status-empty">—</span>';
+  }
 }
 
 function goHome() {
@@ -261,7 +311,7 @@ function goHome() {
   document.getElementById('view-ws').classList.remove('active');
   currentWsIdx = -1;
   for (var i = 0; i < OI_WORKSTREAMS.length; i++) {
-    setActionedIndicator(i, WS_ACTIONED[i] === true);
+    updateStatusRow(i, { criticality: WS_CRITICALITY[i] || '', actioned: WS_ACTIONED[i] === true });
   }
 }
 
@@ -413,6 +463,9 @@ function saveRootCause(idx) {
       try {
         var st = document.getElementById('save-status-' + idx);
         if (st) { st.textContent = result && result.success ? 'Saved.' : 'Save failed.'; }
+        if (result && result.success) {
+          updateStatusRow(idx, { criticality: crit, actioned: act });
+        }
         setTimeout(function() {
           try {
             var st2 = document.getElementById('save-status-' + idx);
@@ -434,6 +487,20 @@ function saveRootCause(idx) {
 // INIT
 // ══════════════════════════════════════════════════════════
 (function init() {
+  var tbody = document.getElementById('status-table-body');
+  if (tbody) {
+    var rows = '';
+    for (var i = 0; i < OI_WORKSTREAMS.length; i++) {
+      var ws = OI_WORKSTREAMS[i];
+      rows += '<tr class="st-row" onclick="openWorkstream(' + i + ')">' +
+        '<td class="st-td st-ws"><span class="st-num-label">' + ws.num + '</span>' + ws.label + '</td>' +
+        '<td class="st-td" id="status-crit-' + i + '"><span class="status-empty">—</span></td>' +
+        '<td class="st-td" id="status-act-' + i + '"><span class="status-empty">—</span></td>' +
+        '</tr>';
+    }
+    tbody.innerHTML = rows;
+  }
+  loadAllActionedStatus();
 })();
 </script>
 
